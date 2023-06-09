@@ -71,10 +71,22 @@ class Backend {
 			->join('cr', 'calendars', 'c', $query->expr()->eq('cr.calendar_id', 'c.id'));
 		$stmt = $query->execute();
 
-		return array_map(
+		$results = array_map(
 			[$this, 'fixRowTyping'],
 			$stmt->fetchAll()
 		);
+
+		$results = array_map(
+			function (array $row) {
+				$row['calendardata'] = (string) $row['calendardata'];
+				$row['displayname'] = (string) $row['displayname'];
+				$row['principaluri'] = (string) $row['principaluri'];
+
+				return $row;
+			},
+			$results
+		);
+		return $results;
 	}
 
 	/**
