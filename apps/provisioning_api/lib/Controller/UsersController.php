@@ -610,7 +610,7 @@ class UsersController extends AUserData {
 			$targetUser = $currentLoggedInUser;
 		}
 
-		// Editing self (display, email)
+		// Editing self (display)
 		if ($this->config->getSystemValue('allow_user_to_change_display_name', true) !== false) {
 			if (
 				$targetUser->getBackend() instanceof ISetDisplayNameBackend
@@ -618,6 +618,9 @@ class UsersController extends AUserData {
 			) {
 				$permittedFields[] = IAccountManager::PROPERTY_DISPLAYNAME;
 			}
+		}
+		// Editing self (email)
+		if ($this->config->getSystemValue('allow_user_to_change_email_address', true) !== false) {
 			$permittedFields[] = IAccountManager::PROPERTY_EMAIL;
 		}
 
@@ -753,7 +756,7 @@ class UsersController extends AUserData {
 
 		$permittedFields = [];
 		if ($targetUser->getUID() === $currentLoggedInUser->getUID()) {
-			// Editing self (display, email)
+			// Editing self (display)
 			if ($this->config->getSystemValue('allow_user_to_change_display_name', true) !== false) {
 				if (
 					$targetUser->getBackend() instanceof ISetDisplayNameBackend
@@ -762,8 +765,12 @@ class UsersController extends AUserData {
 					$permittedFields[] = self::USER_FIELD_DISPLAYNAME;
 					$permittedFields[] = IAccountManager::PROPERTY_DISPLAYNAME;
 				}
+			}
+			// Editing self (email)
+			if ($this->config->getSystemValue('allow_user_to_change_email_address', true) !== false) {
 				$permittedFields[] = IAccountManager::PROPERTY_EMAIL;
 			}
+			
 
 			$permittedFields[] = IAccountManager::PROPERTY_DISPLAYNAME . self::SCOPE_SUFFIX;
 			$permittedFields[] = IAccountManager::PROPERTY_EMAIL . self::SCOPE_SUFFIX;
