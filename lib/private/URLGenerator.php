@@ -43,7 +43,7 @@ class URLGenerator implements IURLGenerator {
 		IUserSession $userSession,
 		ICacheFactory $cacheFactory,
 		IRequest $request,
-		Router $router
+		Router $router,
 	) {
 		$this->config = $config;
 		$this->userSession = $userSession;
@@ -96,7 +96,7 @@ class URLGenerator implements IURLGenerator {
 	public function linkToOCSRouteAbsolute(string $routeName, array $arguments = []): string {
 		// Returns `/subfolder/index.php/ocsapp/…` with `'htaccess.IgnoreFrontController' => false` in config.php
 		// And `/subfolder/ocsapp/…` with `'htaccess.IgnoreFrontController' => true` in config.php
-		$route = $this->router->generate('ocs.'.$routeName, $arguments, false);
+		$route = $this->router->generate('ocs.' . $routeName, $arguments, false);
 
 		// Cut off `/subfolder`
 		if (\OC::$WEBROOT !== '' && str_starts_with($route, \OC::$WEBROOT)) {
@@ -176,8 +176,8 @@ class URLGenerator implements IURLGenerator {
 	 * Returns the path to the image.
 	 */
 	public function imagePath(string $appName, string $file): string {
-		$cache = $this->cacheFactory->createDistributed('imagePath-'.md5($this->getBaseUrl()).'-');
-		$cacheKey = $appName.'-'.$file;
+		$cache = $this->cacheFactory->createDistributed('imagePath-' . md5($this->getBaseUrl()) . '-');
+		$cacheKey = $appName . '-' . $file;
 		if ($key = $cache->get($cacheKey)) {
 			return $key;
 		}
@@ -189,14 +189,14 @@ class URLGenerator implements IURLGenerator {
 		$basename = substr(basename($file), 0, -4);
 
 		try {
-			$appPath = $this->getAppManager()->getAppPath($appName);
-		} catch (AppPathNotFoundException $e) {
 			if ($appName === 'core' || $appName === '') {
 				$appName = 'core';
 				$appPath = false;
 			} else {
-				throw new RuntimeException('image not found: image: ' . $file . ' webroot: ' . \OC::$WEBROOT . ' serverroot: ' . \OC::$SERVERROOT);
+				$appPath = $this->getAppManager()->getAppPath($appName);
 			}
+		} catch (AppPathNotFoundException $e) {
+			throw new RuntimeException('image not found: image: ' . $file . ' webroot: ' . \OC::$WEBROOT . ' serverroot: ' . \OC::$SERVERROOT);
 		}
 
 		// Check if the app is in the app folder
@@ -304,6 +304,11 @@ class URLGenerator implements IURLGenerator {
 		if ($href === '') {
 			throw new \InvalidArgumentException('Default navigation entry is missing href: ' . $entryId);
 		}
+
+		if (str_starts_with($href, $this->getBaseUrl())) {
+			return $href;
+		}
+
 		if (str_starts_with($href, '/index.php/') && ($this->config->getSystemValueBool('htaccess.IgnoreFrontController', false) || getenv('front_controller_active') === 'true')) {
 			$href = substr($href, 10);
 		}

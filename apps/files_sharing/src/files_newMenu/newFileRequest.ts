@@ -7,7 +7,7 @@ import type { Entry, Folder, Node } from '@nextcloud/files'
 import { defineAsyncComponent } from 'vue'
 import { spawnDialog } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
-import FileUploadSvg from '@mdi/svg/svg/file-upload.svg?raw'
+import FileUploadSvg from '@mdi/svg/svg/file-upload-outline.svg?raw'
 
 import Config from '../services/ConfigService'
 import { isPublicShare } from '@nextcloud/sharing/public'
@@ -25,6 +25,9 @@ export const entry = {
 	enabled(): boolean {
 		// not on public shares
 		if (isPublicShare()) {
+			return false
+		}
+		if (!sharingConfig.isPublicUploadEnabled) {
 			return false
 		}
 		// We will check for the folder permission on the dialog

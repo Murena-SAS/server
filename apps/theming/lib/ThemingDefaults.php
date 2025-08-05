@@ -1,4 +1,5 @@
 <?php
+
 /**
  * SPDX-FileCopyrightText: 2016 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -120,10 +121,10 @@ class ThemingDefaults extends \OC_Defaults {
 
 		if ($entity !== '') {
 			if ($baseUrl !== '') {
-				$footer = '<a href="' . $baseUrl . '" target="_blank"' .
-					' rel="noreferrer noopener" class="entity-name">' . $entity . '</a>';
+				$footer = '<a href="' . $baseUrl . '" target="_blank"'
+					. ' rel="noreferrer noopener" class="entity-name">' . $entity . '</a>';
 			} else {
-				$footer = '<span class="entity-name">' .$entity . '</span>';
+				$footer = '<span class="entity-name">' . $entity . '</span>';
 			}
 		}
 		$footer .= ($slogan !== '' ? ' – ' . $slogan : '');
@@ -154,8 +155,8 @@ class ThemingDefaults extends \OC_Defaults {
 			if ($link['url'] !== ''
 				&& filter_var($link['url'], FILTER_VALIDATE_URL)
 			) {
-				$legalLinks .= $divider . '<a href="' . $link['url'] . '" class="legal" target="_blank"' .
-					' rel="noreferrer noopener">' . $link['text'] . '</a>';
+				$legalLinks .= $divider . '<a href="' . $link['url'] . '" class="legal" target="_blank"'
+					. ' rel="noreferrer noopener">' . $link['text'] . '</a>';
 				$divider = ' · ';
 			}
 		}
@@ -340,10 +341,10 @@ class ThemingDefaults extends \OC_Defaults {
 			'theming-favicon-mime' => "'" . $this->config->getAppValue('theming', 'faviconMime') . "'"
 		];
 
-		$variables['image-logo'] = "url('".$this->imageManager->getImageUrl('logo')."')";
-		$variables['image-logoheader'] = "url('".$this->imageManager->getImageUrl('logoheader')."')";
-		$variables['image-favicon'] = "url('".$this->imageManager->getImageUrl('favicon')."')";
-		$variables['image-login-background'] = "url('".$this->imageManager->getImageUrl('background')."')";
+		$variables['image-logo'] = "url('" . $this->imageManager->getImageUrl('logo') . "')";
+		$variables['image-logoheader'] = "url('" . $this->imageManager->getImageUrl('logoheader') . "')";
+		$variables['image-favicon'] = "url('" . $this->imageManager->getImageUrl('favicon') . "')";
+		$variables['image-login-background'] = "url('" . $this->imageManager->getImageUrl('background') . "')";
 		$variables['image-login-plain'] = 'false';
 
 		if ($this->appConfig->getValueString(Application::APP_ID, 'primary_color', '') !== '') {

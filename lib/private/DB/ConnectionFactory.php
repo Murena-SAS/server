@@ -108,7 +108,7 @@ class ConnectionFactory {
 		$normalizedType = $this->normalizeType($type);
 		$eventManager = new EventManager();
 		$eventManager->addEventSubscriber(new SetTransactionIsolationLevel());
-		$connectionParams = $this->createConnectionParams('', $additionalConnectionParams);
+		$connectionParams = $this->createConnectionParams('', $additionalConnectionParams, $type);
 		switch ($normalizedType) {
 			case 'pgsql':
 				// pg_connect used by Doctrine DBAL does not support URI notation (enclosed in brackets)
@@ -121,21 +121,9 @@ class ConnectionFactory {
 
 			case 'oci':
 				$eventManager->addEventSubscriber(new OracleSessionInit);
-				// the driverOptions are unused in dbal and need to be mapped to the parameters
-				if (isset($connectionParams['driverOptions'])) {
-					$connectionParams = array_merge($connectionParams, $connectionParams['driverOptions']);
-				}
-				$host = $connectionParams['host'];
-				$port = $connectionParams['port'] ?? null;
-				$dbName = $connectionParams['dbname'];
-
-				// we set the connect string as dbname and unset the host to coerce doctrine into using it as connect string
-				if ($host === '') {
-					$connectionParams['dbname'] = $dbName; // use dbname as easy connect name
-				} else {
-					$connectionParams['dbname'] = '//' . $host . (!empty($port) ? ":{$port}" : '') . '/' . $dbName;
-				}
-				unset($connectionParams['host']);
+				$connectionParams = $this->forceConnectionStringOracle($connectionParams);
+				$connectionParams['primary'] = $this->forceConnectionStringOracle($connectionParams['primary']);
+				$connectionParams['replica'] = array_map([$this, 'forceConnectionStringOracle'], $connectionParams['replica']);
 				break;
 
 			case 'sqlite3':
@@ -175,12 +163,10 @@ class ConnectionFactory {
 
 	/**
 	 * Create the connection parameters for the config
-	 *
-	 * @param string $configPrefix
-	 * @return array
 	 */
-	public function createConnectionParams(string $configPrefix = '', array $additionalConnectionParams = []) {
-		$type = $this->config->getValue('dbtype', 'sqlite');
+	public function createConnectionParams(string $configPrefix = '', array $additionalConnectionParams = [], ?string $type = null) {
+		// use provided type or if null use type from config
+		$type = $type ?? $this->config->getValue('dbtype', 'sqlite');
 
 		$connectionParams = array_merge($this->getDefaultConnectionParams($type), [
 			'user' => $this->config->getValue($configPrefix . 'dbuser', $this->config->getValue('dbuser', '')),
@@ -212,7 +198,7 @@ class ConnectionFactory {
 			'tablePrefix' => $connectionParams['tablePrefix']
 		];
 
-		if ($this->config->getValue('mysql.utf8mb4', false)) {
+		if ($type === 'mysql' && $this->config->getValue('mysql.utf8mb4', false)) {
 			$connectionParams['defaultTableOptions'] = [
 				'collate' => 'utf8mb4_bin',
 				'charset' => 'utf8mb4',
@@ -266,5 +252,25 @@ class ConnectionFactory {
 		}
 
 		return $params;
+	}
+
+	protected function forceConnectionStringOracle(array $connectionParams): array {
+		// the driverOptions are unused in dbal and need to be mapped to the parameters
+		if (isset($connectionParams['driverOptions'])) {
+			$connectionParams = array_merge($connectionParams, $connectionParams['driverOptions']);
+		}
+		$host = $connectionParams['host'];
+		$port = $connectionParams['port'] ?? null;
+		$dbName = $connectionParams['dbname'];
+
+		// we set the connect string as dbname and unset the host to coerce doctrine into using it as connect string
+		if ($host === '') {
+			$connectionParams['dbname'] = $dbName; // use dbname as easy connect name
+		} else {
+			$connectionParams['dbname'] = '//' . $host . (!empty($port) ? ":{$port}" : '') . '/' . $dbName;
+		}
+		unset($connectionParams['host']);
+
+		return $connectionParams;
 	}
 }

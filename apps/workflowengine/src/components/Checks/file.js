@@ -4,6 +4,7 @@
  */
 
 import { stringValidator, validateIPv4, validateIPv6 } from '../../helpers/validators.js'
+import { registerCustomElement } from '../../helpers/window.js'
 import FileMimeType from './FileMimeType.vue'
 import FileSystemTag from './FileSystemTag.vue'
 
@@ -31,10 +32,23 @@ const FileChecks = [
 	},
 
 	{
+		class: 'OCA\\WorkflowEngine\\Check\\Directory',
+		name: t('workflowengine', 'Directory'),
+		operators: stringOrRegexOperators,
+		placeholder: (check) => {
+			if (check.operator === 'matches' || check.operator === '!matches') {
+				return '/^myfolder/.+$/i'
+			}
+			return 'myfolder/subfolder'
+		},
+		validate: stringValidator,
+	},
+
+	{
 		class: 'OCA\\WorkflowEngine\\Check\\FileMimeType',
 		name: t('workflowengine', 'File MIME type'),
 		operators: stringOrRegexOperators,
-		component: FileMimeType,
+		element: registerCustomElement(FileMimeType, 'oca-workflowengine-checks-file_mime_type'),
 	},
 
 	{
@@ -80,7 +94,7 @@ const FileChecks = [
 			{ operator: 'is', name: t('workflowengine', 'is tagged with') },
 			{ operator: '!is', name: t('workflowengine', 'is not tagged with') },
 		],
-		component: FileSystemTag,
+		element: registerCustomElement(FileSystemTag, 'oca-workflowengine-file_system_tag'),
 	},
 ]
 

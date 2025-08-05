@@ -1,4 +1,5 @@
 <?php
+
 /**
  * SPDX-FileCopyrightText: 2016 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
@@ -7,6 +8,7 @@ namespace OCA\WorkflowEngine;
 
 use Doctrine\DBAL\Exception;
 use OCA\WorkflowEngine\AppInfo\Application;
+use OCA\WorkflowEngine\Check\Directory;
 use OCA\WorkflowEngine\Check\FileMimeType;
 use OCA\WorkflowEngine\Check\FileName;
 use OCA\WorkflowEngine\Check\FileSize;
@@ -99,7 +101,7 @@ class Manager implements IManager {
 			->where($query->expr()->neq('events', $query->createNamedParameter('[]'), IQueryBuilder::PARAM_STR))
 			->groupBy('class', 'entity', $query->expr()->castColumn('events', IQueryBuilder::PARAM_STR));
 
-		$result = $query->execute();
+		$result = $query->executeQuery();
 		$operations = [];
 		while ($row = $result->fetch()) {
 			$eventNames = \json_decode($row['events']);
@@ -145,7 +147,7 @@ class Manager implements IManager {
 			->where($query->expr()->eq('o.class', $query->createParameter('operationClass')));
 
 		$query->setParameters(['operationClass' => $operationClass]);
-		$result = $query->execute();
+		$result = $query->executeQuery();
 
 		$scopesByOperation[$operationClass] = [];
 		while ($row = $result->fetch()) {
@@ -180,7 +182,7 @@ class Manager implements IManager {
 		}
 
 		$query->setParameters(['scope' => $scopeContext->getScope(), 'scopeId' => $scopeContext->getScopeId()]);
-		$result = $query->execute();
+		$result = $query->executeQuery();
 
 		$this->operations[$scopeContext->getHash()] = [];
 		while ($row = $result->fetch()) {
@@ -221,7 +223,7 @@ class Manager implements IManager {
 		$query->select('*')
 			->from('flow_operations')
 			->where($query->expr()->eq('id', $query->createNamedParameter($id)));
-		$result = $query->execute();
+		$result = $query->executeQuery();
 		$row = $result->fetch();
 		$result->closeCursor();
 
@@ -238,7 +240,7 @@ class Manager implements IManager {
 		array $checkIds,
 		string $operation,
 		string $entity,
-		array $events
+		array $events,
 	): int {
 		$query = $this->connection->getQueryBuilder();
 		$query->insert('flow_operations')
@@ -250,7 +252,7 @@ class Manager implements IManager {
 				'entity' => $query->createNamedParameter($entity),
 				'events' => $query->createNamedParameter(json_encode($events))
 			]);
-		$query->execute();
+		$query->executeStatement();
 
 		$this->cacheFactory->createDistributed('flow')->remove('events');
 
@@ -264,7 +266,7 @@ class Manager implements IManager {
 	 * @param string $operation
 	 * @return array The added operation
 	 * @throws \UnexpectedValueException
-	 * @throw Exception
+	 * @throws Exception
 	 */
 	public function addOperation(
 		string $class,
@@ -273,7 +275,7 @@ class Manager implements IManager {
 		string $operation,
 		ScopeContext $scope,
 		string $entity,
-		array $events
+		array $events,
 	) {
 		$this->validateOperation($class, $name, $checks, $operation, $scope, $entity, $events);
 
@@ -313,7 +315,7 @@ class Manager implements IManager {
 		}
 
 		$qb->setParameters(['scope' => $scopeContext->getScope(), 'scopeId' => $scopeContext->getScopeId()]);
-		$result = $qb->execute();
+		$result = $qb->executeQuery();
 
 		$operations = [];
 		while (($opId = $result->fetchOne()) !== false) {
@@ -342,7 +344,7 @@ class Manager implements IManager {
 		string $operation,
 		ScopeContext $scopeContext,
 		string $entity,
-		array $events
+		array $events,
 	): array {
 		if (!$this->canModify($id, $scopeContext)) {
 			throw new \DomainException('Target operation not within scope');
@@ -393,12 +395,12 @@ class Manager implements IManager {
 			$this->connection->beginTransaction();
 			$result = (bool)$query->delete('flow_operations')
 				->where($query->expr()->eq('id', $query->createNamedParameter($id)))
-				->execute();
+				->executeStatement();
 			if ($result) {
 				$qb = $this->connection->getQueryBuilder();
 				$result &= (bool)$qb->delete('flow_operations_scope')
 					->where($qb->expr()->eq('operation_id', $qb->createNamedParameter($id)))
-					->execute();
+					->executeStatement();
 			}
 			$this->connection->commit();
 		} catch (Exception $e) {
@@ -537,7 +539,7 @@ class Manager implements IManager {
 		$query->select('*')
 			->from('flow_checks')
 			->where($query->expr()->in('id', $query->createNamedParameter($checkIds, IQueryBuilder::PARAM_INT_ARRAY)));
-		$result = $query->execute();
+		$result = $query->executeQuery();
 
 		while ($row = $result->fetch()) {
 			$this->checks[(int)$row['id']] = $row;
@@ -568,7 +570,7 @@ class Manager implements IManager {
 		$query->select('id')
 			->from('flow_checks')
 			->where($query->expr()->eq('hash', $query->createNamedParameter($hash)));
-		$result = $query->execute();
+		$result = $query->executeQuery();
 
 		if ($row = $result->fetch()) {
 			$result->closeCursor();
@@ -583,7 +585,7 @@ class Manager implements IManager {
 				'value' => $query->createNamedParameter($value),
 				'hash' => $query->createNamedParameter($hash),
 			]);
-		$query->execute();
+		$query->executeStatement();
 
 		return $query->getLastInsertId();
 	}
@@ -597,7 +599,7 @@ class Manager implements IManager {
 			'type' => $query->createNamedParameter($scope->getScope()),
 			'value' => $query->createNamedParameter($scope->getScopeId()),
 		]);
-		$insertQuery->execute();
+		$insertQuery->executeStatement();
 	}
 
 	public function formatOperation(array $operation): array {
@@ -691,6 +693,7 @@ class Manager implements IManager {
 	protected function getBuildInChecks(): array {
 		try {
 			return [
+				$this->container->query(Directory::class),
 				$this->container->query(FileMimeType::class),
 				$this->container->query(FileName::class),
 				$this->container->query(FileSize::class),

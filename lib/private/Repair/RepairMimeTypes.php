@@ -26,7 +26,7 @@ class RepairMimeTypes implements IRepairStep {
 	public function __construct(
 		protected IConfig $config,
 		protected IAppConfig $appConfig,
-		protected IDBConnection $connection
+		protected IDBConnection $connection,
 	) {
 	}
 
@@ -331,10 +331,26 @@ class RepairMimeTypes implements IRepairStep {
 	private function introduceZstType(): IResult|int|null {
 		$updatedMimetypes = [
 			'zst' => 'application/zstd',
+			'nfo' => 'text/x-nfo',
 		];
 
 		return $this->updateMimetypes($updatedMimetypes);
 	}
+
+	/**
+	 * @throws Exception
+	 * @since 32.0.0
+	 */
+	private function introduceMusicxmlType(): IResult|int|null {
+		$updatedMimetypes = [
+			'mxl' => 'application/vnd.recordare.musicxml',
+			'musicxml' => 'application/vnd.recordare.musicxml+xml',
+		];
+
+		return $this->updateMimetypes($updatedMimetypes);
+	}
+
+
 
 	/**
 	 * Check if there are any migrations available
@@ -444,6 +460,10 @@ class RepairMimeTypes implements IRepairStep {
 
 		if (version_compare($mimeTypeVersion, '31.0.0.0', '<') && $this->introduceZstType()) {
 			$out->info('Fixed zst mime type');
+		}
+
+		if (version_compare($mimeTypeVersion, '32.0.0.0', '<') && $this->introduceMusicxmlType()) {
+			$out->info('Fixed musicxml mime type');
 		}
 
 		if (!$this->dryRun) {

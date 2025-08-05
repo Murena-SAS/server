@@ -8,8 +8,8 @@ import { translate as t } from '@nextcloud/l10n'
 import { ShareType } from '@nextcloud/sharing'
 import { isPublicShare } from '@nextcloud/sharing/public'
 
-import AccountGroupSvg from '@mdi/svg/svg/account-group.svg?raw'
-import AccountPlusSvg from '@mdi/svg/svg/account-plus.svg?raw'
+import AccountGroupSvg from '@mdi/svg/svg/account-group-outline.svg?raw'
+import AccountPlusSvg from '@mdi/svg/svg/account-plus-outline.svg?raw'
 import LinkSvg from '@mdi/svg/svg/link.svg?raw'
 import CircleSvg from '../../../../core/img/apps/circles.svg?raw'
 
@@ -19,11 +19,12 @@ import { generateAvatarSvg } from '../utils/AccountIcon'
 import './sharingStatusAction.scss'
 
 const isExternal = (node: Node) => {
-	return node.attributes.remote_id !== undefined
+	return node.attributes?.['is-federated'] ?? false
 }
 
+export const ACTION_SHARING_STATUS = 'sharing-status'
 export const action = new FileAction({
-	id: 'sharing-status',
+	id: ACTION_SHARING_STATUS,
 	displayName(nodes: Node[]) {
 		const node = nodes[0]
 		const shareTypes = Object.values(node?.attributes?.['share-types'] || {}).flat() as number[]

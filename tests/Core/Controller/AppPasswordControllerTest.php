@@ -123,12 +123,12 @@ class AppPasswordControllerTest extends TestCase {
 		$credentials->method('getLoginName')
 			->willReturn('myLoginName');
 		$this->request->method('getHeader')
-			->with('USER_AGENT')
+			->with('user-agent')
 			->willReturn('myUA');
 		$this->random->method('generate')
 			->with(
 				72,
-				ISecureRandom::CHAR_UPPER.ISecureRandom::CHAR_LOWER.ISecureRandom::CHAR_DIGITS
+				ISecureRandom::CHAR_UPPER . ISecureRandom::CHAR_LOWER . ISecureRandom::CHAR_DIGITS
 			)->willReturn('myToken');
 
 		$this->tokenProvider->expects($this->once())
@@ -164,12 +164,12 @@ class AppPasswordControllerTest extends TestCase {
 		$credentials->method('getLoginName')
 			->willReturn('myLoginName');
 		$this->request->method('getHeader')
-			->with('USER_AGENT')
+			->with('user-agent')
 			->willReturn('myUA');
 		$this->random->method('generate')
 			->with(
 				72,
-				ISecureRandom::CHAR_UPPER.ISecureRandom::CHAR_LOWER.ISecureRandom::CHAR_DIGITS
+				ISecureRandom::CHAR_UPPER . ISecureRandom::CHAR_LOWER . ISecureRandom::CHAR_DIGITS
 			)->willReturn('myToken');
 
 		$this->tokenProvider->expects($this->once())

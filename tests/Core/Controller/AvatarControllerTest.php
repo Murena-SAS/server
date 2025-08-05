@@ -1,4 +1,5 @@
 <?php
+
 /**
  * SPDX-FileCopyrightText: 2016-2024 Nextcloud GmbH and Nextcloud contributors
  * SPDX-FileCopyrightText: 2016 ownCloud, Inc.
@@ -130,7 +131,7 @@ class AvatarControllerTest extends \Test\TestCase {
 	 */
 	public function testGetAvatarNoAvatar(): void {
 		$this->avatarManager->method('getAvatar')->willReturn($this->avatarMock);
-		$this->avatarMock->method('getFile')->will($this->throwException(new NotFoundException()));
+		$this->avatarMock->method('getFile')->willThrowException(new NotFoundException());
 		$response = $this->avatarController->getAvatar('userId', 32);
 
 		//Comment out until JS is fixed
@@ -183,7 +184,7 @@ class AvatarControllerTest extends \Test\TestCase {
 		$this->avatarManager
 			->method('getAvatar')
 			->with('userDoesNotExist')
-			->will($this->throwException(new \Exception('user does not exist')));
+			->willThrowException(new \Exception('user does not exist'));
 
 		$response = $this->avatarController->getAvatar('userDoesNotExist', 32);
 
@@ -287,7 +288,7 @@ class AvatarControllerTest extends \Test\TestCase {
 	 * Test what happens if the removing of the avatar fails
 	 */
 	public function testDeleteAvatarException(): void {
-		$this->avatarMock->method('remove')->will($this->throwException(new \Exception('foo')));
+		$this->avatarMock->method('remove')->willThrowException(new \Exception('foo'));
 		$this->avatarManager->method('getAvatar')->willReturn($this->avatarMock);
 
 		$this->logger->expects($this->once())
@@ -309,7 +310,7 @@ class AvatarControllerTest extends \Test\TestCase {
 	 * Fetch tmp avatar
 	 */
 	public function testTmpAvatarValid(): void {
-		$this->cache->method('get')->willReturn(file_get_contents(\OC::$SERVERROOT.'/tests/data/testimage.jpg'));
+		$this->cache->method('get')->willReturn(file_get_contents(\OC::$SERVERROOT . '/tests/data/testimage.jpg'));
 
 		$response = $this->avatarController->getTmpAvatar();
 		$this->assertEquals(Http::STATUS_OK, $response->getStatus());
@@ -331,14 +332,14 @@ class AvatarControllerTest extends \Test\TestCase {
 	public function testPostAvatarFile(): void {
 		//Create temp file
 		$fileName = tempnam('', 'avatarTest');
-		$copyRes = copy(\OC::$SERVERROOT.'/tests/data/testimage.jpg', $fileName);
+		$copyRes = copy(\OC::$SERVERROOT . '/tests/data/testimage.jpg', $fileName);
 		$this->assertTrue($copyRes);
 
 		//Create file in cache
-		$this->cache->method('get')->willReturn(file_get_contents(\OC::$SERVERROOT.'/tests/data/testimage.jpg'));
+		$this->cache->method('get')->willReturn(file_get_contents(\OC::$SERVERROOT . '/tests/data/testimage.jpg'));
 
 		//Create request return
-		$reqRet = ['error' => [0], 'tmp_name' => [$fileName], 'size' => [filesize(\OC::$SERVERROOT.'/tests/data/testimage.jpg')]];
+		$reqRet = ['error' => [0], 'tmp_name' => [$fileName], 'size' => [filesize(\OC::$SERVERROOT . '/tests/data/testimage.jpg')]];
 		$this->request->method('getUploadedFile')->willReturn($reqRet);
 
 		$response = $this->avatarController->postAvatar(null);
@@ -369,14 +370,14 @@ class AvatarControllerTest extends \Test\TestCase {
 	public function testPostAvatarFileGif(): void {
 		//Create temp file
 		$fileName = tempnam('', 'avatarTest');
-		$copyRes = copy(\OC::$SERVERROOT.'/tests/data/testimage.gif', $fileName);
+		$copyRes = copy(\OC::$SERVERROOT . '/tests/data/testimage.gif', $fileName);
 		$this->assertTrue($copyRes);
 
 		//Create file in cache
-		$this->cache->method('get')->willReturn(file_get_contents(\OC::$SERVERROOT.'/tests/data/testimage.gif'));
+		$this->cache->method('get')->willReturn(file_get_contents(\OC::$SERVERROOT . '/tests/data/testimage.gif'));
 
 		//Create request return
-		$reqRet = ['error' => [0], 'tmp_name' => [$fileName], 'size' => [filesize(\OC::$SERVERROOT.'/tests/data/testimage.gif')]];
+		$reqRet = ['error' => [0], 'tmp_name' => [$fileName], 'size' => [filesize(\OC::$SERVERROOT . '/tests/data/testimage.gif')]];
 		$this->request->method('getUploadedFile')->willReturn($reqRet);
 
 		$response = $this->avatarController->postAvatar(null);
@@ -396,7 +397,7 @@ class AvatarControllerTest extends \Test\TestCase {
 			->disableOriginalConstructor()->getMock();
 		$file->expects($this->once())
 			->method('getContent')
-			->willReturn(file_get_contents(\OC::$SERVERROOT.'/tests/data/testimage.jpg'));
+			->willReturn(file_get_contents(\OC::$SERVERROOT . '/tests/data/testimage.jpg'));
 		$file->expects($this->once())
 			->method('getMimeType')
 			->willReturn('image/jpeg');
@@ -469,12 +470,12 @@ class AvatarControllerTest extends \Test\TestCase {
 	public function testPostAvatarException(): void {
 		$this->cache->expects($this->once())
 			->method('set')
-			->will($this->throwException(new \Exception('foo')));
+			->willThrowException(new \Exception('foo'));
 		$file = $this->getMockBuilder('OCP\Files\File')
 			->disableOriginalConstructor()->getMock();
 		$file->expects($this->once())
 			->method('getContent')
-			->willReturn(file_get_contents(\OC::$SERVERROOT.'/tests/data/testimage.jpg'));
+			->willReturn(file_get_contents(\OC::$SERVERROOT . '/tests/data/testimage.jpg'));
 		$file->expects($this->once())
 			->method('getMimeType')
 			->willReturn('image/jpeg');
@@ -512,9 +513,9 @@ class AvatarControllerTest extends \Test\TestCase {
 	 * Test with non square crop
 	 */
 	public function testPostCroppedAvatarNoSquareCrop(): void {
-		$this->cache->method('get')->willReturn(file_get_contents(\OC::$SERVERROOT.'/tests/data/testimage.jpg'));
+		$this->cache->method('get')->willReturn(file_get_contents(\OC::$SERVERROOT . '/tests/data/testimage.jpg'));
 
-		$this->avatarMock->method('set')->will($this->throwException(new \OC\NotSquareException));
+		$this->avatarMock->method('set')->willThrowException(new \OC\NotSquareException);
 		$this->avatarManager->method('getAvatar')->willReturn($this->avatarMock);
 		$response = $this->avatarController->postCroppedAvatar(['x' => 0, 'y' => 0, 'w' => 10, 'h' => 11]);
 
@@ -525,7 +526,7 @@ class AvatarControllerTest extends \Test\TestCase {
 	 * Check for proper reply on proper crop argument
 	 */
 	public function testPostCroppedAvatarValidCrop(): void {
-		$this->cache->method('get')->willReturn(file_get_contents(\OC::$SERVERROOT.'/tests/data/testimage.jpg'));
+		$this->cache->method('get')->willReturn(file_get_contents(\OC::$SERVERROOT . '/tests/data/testimage.jpg'));
 		$this->avatarManager->method('getAvatar')->willReturn($this->avatarMock);
 		$response = $this->avatarController->postCroppedAvatar(['x' => 0, 'y' => 0, 'w' => 10, 'h' => 10]);
 
@@ -537,9 +538,9 @@ class AvatarControllerTest extends \Test\TestCase {
 	 * Test what happens if the cropping of the avatar fails
 	 */
 	public function testPostCroppedAvatarException(): void {
-		$this->cache->method('get')->willReturn(file_get_contents(\OC::$SERVERROOT.'/tests/data/testimage.jpg'));
+		$this->cache->method('get')->willReturn(file_get_contents(\OC::$SERVERROOT . '/tests/data/testimage.jpg'));
 
-		$this->avatarMock->method('set')->will($this->throwException(new \Exception('foo')));
+		$this->avatarMock->method('set')->willThrowException(new \Exception('foo'));
 		$this->avatarManager->method('getAvatar')->willReturn($this->avatarMock);
 
 		$this->logger->expects($this->once())
@@ -554,7 +555,7 @@ class AvatarControllerTest extends \Test\TestCase {
 	 * Check for proper reply on proper crop argument
 	 */
 	public function testFileTooBig(): void {
-		$fileName = \OC::$SERVERROOT.'/tests/data/testimage.jpg';
+		$fileName = \OC::$SERVERROOT . '/tests/data/testimage.jpg';
 		//Create request return
 		$reqRet = ['error' => [0], 'tmp_name' => [$fileName], 'size' => [21 * 1024 * 1024]];
 		$this->request->method('getUploadedFile')->willReturn($reqRet);

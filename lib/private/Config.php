@@ -35,7 +35,7 @@ class Config {
 	 */
 	public function __construct($configDir, $fileName = 'config.php') {
 		$this->configDir = $configDir;
-		$this->configFilePath = $this->configDir.$fileName;
+		$this->configFilePath = $this->configDir . $fileName;
 		$this->configFileName = $fileName;
 		$this->readData();
 		$this->isReadOnly = $this->getValue('config_is_read_only', false);
@@ -65,14 +65,34 @@ class Config {
 	 */
 	public function getValue($key, $default = null) {
 		if (isset($this->envCache[$key])) {
-			return $this->envCache[$key];
+			return self::trustSystemConfig($this->envCache[$key]);
 		}
 
 		if (isset($this->cache[$key])) {
-			return $this->cache[$key];
+			return self::trustSystemConfig($this->cache[$key]);
 		}
 
 		return $default;
+	}
+
+	/**
+	 * Since system config is admin controlled, we can tell psalm to ignore any taint
+	 *
+	 * @psalm-taint-escape callable
+	 * @psalm-taint-escape cookie
+	 * @psalm-taint-escape file
+	 * @psalm-taint-escape has_quotes
+	 * @psalm-taint-escape header
+	 * @psalm-taint-escape html
+	 * @psalm-taint-escape include
+	 * @psalm-taint-escape ldap
+	 * @psalm-taint-escape shell
+	 * @psalm-taint-escape sql
+	 * @psalm-taint-escape unserialize
+	 * @psalm-pure
+	 */
+	public static function trustSystemConfig(mixed $value): mixed {
+		return $value;
 	}
 
 	/**
@@ -171,7 +191,7 @@ class Config {
 		$configFiles = [$this->configFilePath];
 
 		// Add all files in the config dir ending with the same file name
-		$extra = glob($this->configDir.'*.'.$this->configFileName);
+		$extra = glob($this->configDir . '*.' . $this->configFileName);
 		if (is_array($extra)) {
 			natsort($extra);
 			$configFiles = array_merge($configFiles, $extra);
@@ -186,7 +206,8 @@ class Config {
 				@opcache_invalidate($file, false);
 			}
 
-			$filePointer = @fopen($file, 'r');
+			// suppressor doesn't work here at boot time since it'll go via our onError custom error handler
+			$filePointer = file_exists($file) ? @fopen($file, 'r') : false;
 			if ($filePointer === false) {
 				// e.g. wrong permissions are set
 				if ($file === $this->configFilePath) {
@@ -245,17 +266,17 @@ class Config {
 	 * @throws HintException If the config file cannot be written to
 	 * @throws \Exception If no file lock can be acquired
 	 */
-	private function writeData() {
+	private function writeData(): void {
 		$this->checkReadOnly();
 
-		if (!is_file(\OC::$configDir.'/CAN_INSTALL') && !isset($this->cache['version'])) {
+		if (!is_file(\OC::$configDir . '/CAN_INSTALL') && !isset($this->cache['version'])) {
 			throw new HintException(sprintf('Configuration was not read or initialized correctly, not overwriting %s', $this->configFilePath));
 		}
 
 		// Create a php file ...
 		$content = "<?php\n";
 		$content .= '$CONFIG = ';
-		$content .= var_export($this->cache, true);
+		$content .= var_export(self::trustSystemConfig($this->cache), true);
 		$content .= ";\n";
 
 		touch($this->configFilePath);

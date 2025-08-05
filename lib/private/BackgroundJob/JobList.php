@@ -20,14 +20,18 @@ use OCP\IDBConnection;
 use Psr\Log\LoggerInterface;
 use function get_class;
 use function json_encode;
+use function min;
 use function strlen;
 
 class JobList implements IJobList {
+	/** @var array<string, int> */
+	protected array $alreadyVisitedParallelBlocked = [];
+
 	public function __construct(
 		protected IDBConnection $connection,
 		protected IConfig $config,
 		protected ITimeFactory $timeFactory,
-		protected LoggerInterface $logger
+		protected LoggerInterface $logger,
 	) {
 	}
 
@@ -197,6 +201,12 @@ class JobList implements IJobList {
 			$job = $this->buildJob($row);
 
 			if ($job instanceof IParallelAwareJob && !$job->getAllowParallelRuns() && $this->hasReservedJob(get_class($job))) {
+				if (!isset($this->alreadyVisitedParallelBlocked[get_class($job)])) {
+					$this->alreadyVisitedParallelBlocked[get_class($job)] = $job->getId();
+				} elseif ($this->alreadyVisitedParallelBlocked[get_class($job)] === $job->getId()) {
+					$this->logger->info('Skipped through all jobs and revisited a IParallelAwareJob blocked job again, giving up.', ['app' => 'cron']);
+					return null;
+				}
 				$this->logger->info('Skipping ' . get_class($job) . ' job with ID ' . $job->getId() . ' because another job with the same class is already running', ['app' => 'cron']);
 
 				$update = $this->connection->getQueryBuilder();
@@ -206,7 +216,31 @@ class JobList implements IJobList {
 				$update->setParameter('jobid', $row['id']);
 				$update->executeStatement();
 
-				return $this->getNext($onlyTimeSensitive);
+				return $this->getNext($onlyTimeSensitive, $jobClasses);
+			}
+
+			if ($job !== null && isset($this->alreadyVisitedParallelBlocked[get_class($job)])) {
+				unset($this->alreadyVisitedParallelBlocked[get_class($job)]);
+			}
+
+			if ($job instanceof \OCP\BackgroundJob\TimedJob) {
+				$now = $this->timeFactory->getTime();
+				$nextPossibleRun = $job->getLastRun() + $job->getInterval();
+				if ($now < $nextPossibleRun) {
+					// This job is not ready for execution yet. Set timestamps to the future to avoid
+					// re-checking with every cron run.
+					// To avoid bugs that lead to jobs never executing again, the future timestamp is
+					// capped at two days.
+					$nextCheck = min($nextPossibleRun, $now + 48 * 3600);
+					$updateTimedJob = $this->connection->getQueryBuilder();
+					$updateTimedJob->update('jobs')
+						->set('last_checked', $updateTimedJob->createNamedParameter($nextCheck, IQueryBuilder::PARAM_INT))
+						->where($updateTimedJob->expr()->eq('id', $updateTimedJob->createParameter('jobid')));
+					$updateTimedJob->setParameter('jobid', $row['id']);
+					$updateTimedJob->executeStatement();
+
+					return $this->getNext($onlyTimeSensitive, $jobClasses);
+				}
 			}
 
 			$update = $this->connection->getQueryBuilder();
@@ -291,6 +325,7 @@ class JobList implements IJobList {
 					$class = $row['class'];
 					$job = new $class();
 				} else {
+					$this->logger->warning('failed to create instance of background job: ' . $row['class'], ['app' => 'cron', 'exception' => $e]);
 					// Remove job from disabled app or old version of an app
 					$this->removeById($row['id']);
 					return null;

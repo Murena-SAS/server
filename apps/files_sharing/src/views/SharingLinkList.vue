@@ -7,12 +7,6 @@
 	<ul v-if="canLinkShare"
 		:aria-label="t('files_sharing', 'Link shares')"
 		class="sharing-link-list">
-		<!-- If no link shares, show the add link default entry -->
-		<SharingEntryLink v-if="!hasLinkShares && canReshare"
-			:can-reshare="canReshare"
-			:file-info="fileInfo"
-			@add:share="addShare" />
-
 		<!-- Else we display the list -->
 		<template v-if="hasShares">
 			<!-- using shares[index] to work with .sync -->
@@ -27,17 +21,24 @@
 				@remove:share="removeShare"
 				@open-sharing-details="openSharingDetails(share)" />
 		</template>
+
+		<!-- If no link shares, show the add link default entry -->
+		<SharingEntryLink v-if="!hasLinkShares && canReshare"
+			:can-reshare="canReshare"
+			:file-info="fileInfo"
+			@add:share="addShare" />
 	</ul>
 </template>
 
 <script>
 import { getCapabilities } from '@nextcloud/capabilities'
+
 import { t } from '@nextcloud/l10n'
 
 import Share from '../models/Share.js'
-import ShareTypes from '../mixins/ShareTypes.js'
 import SharingEntryLink from '../components/SharingEntryLink.vue'
 import ShareDetails from '../mixins/ShareDetails.js'
+import { ShareType } from '@nextcloud/sharing'
 
 export default {
 	name: 'SharingLinkList',
@@ -46,7 +47,7 @@ export default {
 		SharingEntryLink,
 	},
 
-	mixins: [ShareTypes, ShareDetails],
+	mixins: [ShareDetails],
 
 	props: {
 		fileInfo: {
@@ -80,7 +81,7 @@ export default {
 		 * @return {Array}
 		 */
 		hasLinkShares() {
-			return this.shares.filter(share => share.type === this.SHARE_TYPES.SHARE_TYPE_LINK).length > 0
+			return this.shares.filter(share => share.type === ShareType.Link).length > 0
 		},
 
 		/**
@@ -105,7 +106,7 @@ export default {
 		 */
 		addShare(share, resolve) {
 			// eslint-disable-next-line vue/no-mutating-props
-			this.shares.unshift(share)
+			this.shares.push(share)
 			this.awaitForShare(share, resolve)
 		},
 

@@ -77,7 +77,6 @@ abstract class AbstractDatabase {
 		$this->config->setValues([
 			'dbname' => $dbName,
 			'dbhost' => $dbHost,
-			'dbport' => $dbPort,
 			'dbtableprefix' => $dbTablePrefix,
 		]);
 
@@ -127,13 +126,10 @@ abstract class AbstractDatabase {
 		return $connection;
 	}
 
-	/**
-	 * @param string $username
-	 */
-	abstract public function setupDatabase($username);
+	abstract public function setupDatabase();
 
 	public function runMigrations(?IOutput $output = null) {
-		if (!is_dir(\OC::$SERVERROOT.'/core/Migrations')) {
+		if (!is_dir(\OC::$SERVERROOT . '/core/Migrations')) {
 			return;
 		}
 		$ms = new MigrationService('core', \OC::$server->get(Connection::class), $output);
