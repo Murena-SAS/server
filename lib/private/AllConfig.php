@@ -15,8 +15,6 @@ use OCP\Config\ValueType;
 use OCP\IConfig;
 use OCP\IDBConnection;
 use OCP\PreConditionNotMetException;
-use OCP\EventDispatcher\IEventDispatcher;
-use OCP\User\Events\UserConfigChangedEvent;
 
 /**
  * Class to combine all the configuration options ownCloud offers
