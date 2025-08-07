@@ -27,11 +27,9 @@ declare(strict_types=1);
 namespace OCP\User\Events;
 
 use OCP\EventDispatcher\Event;
+use OCP\AppFramework\Attribute\Listenable;
 
-/**
- * @since 31.0.0
- */
-
+#[Listenable(since: '32.0.0')]
 class UserConfigChangedEvent extends Event {
 	private string $userId;
 	private string $appId;
@@ -40,7 +38,7 @@ class UserConfigChangedEvent extends Event {
 	private mixed $oldValue;
 
 	/**
-	 * @since 31.0.0
+	 * @since 32.0.0
 	 */
 
 	public function __construct(string $userId,
@@ -58,7 +56,7 @@ class UserConfigChangedEvent extends Event {
 
 	/**
 	 * @return string
-	 * @since 31.0.0
+	 * @since 32.0.0
 	 */
 	public function getUserId(): string {
 		return $this->userId;
@@ -66,7 +64,7 @@ class UserConfigChangedEvent extends Event {
 
 	/**
 	 * @return string
-	 * @since 31.0.0
+	 * @since 32.0.0
 	 */
 	public function getAppId(): string {
 		return $this->appId;
@@ -74,7 +72,7 @@ class UserConfigChangedEvent extends Event {
 
 	/**
 	 * @return string
-	 * @since 31.0.0
+	 * @since 32.0.0
 	 */
 	public function getKey(): string {
 		return $this->key;
@@ -82,7 +80,7 @@ class UserConfigChangedEvent extends Event {
 
 	/**
 	 * @return mixed
-	 * @since 31.0.0
+	 * @since 32.0.0
 	 */
 	public function getValue() {
 		return $this->value;
@@ -90,7 +88,7 @@ class UserConfigChangedEvent extends Event {
 
 	/**
 	 * @return mixed
-	 * @since 31.0.0
+	 * @since 32.0.0
 	 */
 	public function getOldValue() {
 		return $this->oldValue;
