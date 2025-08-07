@@ -33,27 +33,17 @@ use OCP\EventDispatcher\Event;
  */
 
 class UserConfigChangedEvent extends Event {
-	private string $userId;
-	private string $appId;
-	private string $key;
-	private mixed $value;
-	private mixed $oldValue;
-
 	/**
-	 * @since 31.0.0
+	 * @since 32.0.0
 	 */
-
-	public function __construct(string $userId,
-		string $appId,
-		string $key,
-		mixed $value,
-		mixed $oldValue = null) {
+	public function __construct(
+		private string $userId,
+		private string $appId,
+		private string $key,
+		private mixed $value,
+		private mixed $oldValue = null,
+	) {
 		parent::__construct();
-		$this->userId = $userId;
-		$this->appId = $appId;
-		$this->key = $key;
-		$this->value = $value;
-		$this->oldValue = $oldValue;
 	}
 
 	/**
