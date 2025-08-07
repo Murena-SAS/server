@@ -45,7 +45,6 @@ class UserConfigChangedEvent extends Event {
 	}
 
 	/**
-	 * @return string
 	 * @since 32.0.0
 	 */
 	public function getUserId(): string {
@@ -53,7 +52,6 @@ class UserConfigChangedEvent extends Event {
 	}
 
 	/**
-	 * @return string
 	 * @since 32.0.0
 	 */
 	public function getAppId(): string {
@@ -61,7 +59,6 @@ class UserConfigChangedEvent extends Event {
 	}
 
 	/**
-	 * @return string
 	 * @since 32.0.0
 	 */
 	public function getKey(): string {
@@ -69,18 +66,16 @@ class UserConfigChangedEvent extends Event {
 	}
 
 	/**
-	 * @return mixed
 	 * @since 32.0.0
 	 */
-	public function getValue() {
+	public function getValue(): mixed {
 		return $this->value;
 	}
 
 	/**
-	 * @return mixed
 	 * @since 32.0.0
 	 */
-	public function getOldValue() {
+	public function getOldValue(): mixed {
 		return $this->oldValue;
 	}
 }
