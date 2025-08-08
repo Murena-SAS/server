@@ -27,7 +27,6 @@ use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IConfig;
 use OCP\IDBConnection;
 use OCP\Security\ICrypto;
-use OCP\Server;
 use OCP\User\Events\UserConfigChangedEvent;
 use Psr\Log\LoggerInterface;
 
