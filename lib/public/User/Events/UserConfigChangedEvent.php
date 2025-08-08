@@ -26,8 +26,8 @@ declare(strict_types=1);
 
 namespace OCP\User\Events;
 
-use OCP\EventDispatcher\Event;
 use OCP\AppFramework\Attribute\Listenable;
+use OCP\EventDispatcher\Event;
 
 #[Listenable(since: '32.0.0')]
 class UserConfigChangedEvent extends Event {

@@ -24,13 +24,13 @@ use OCP\Config\ValueType;
 use OCP\DB\Exception as DBException;
 use OCP\DB\IResult;
 use OCP\DB\QueryBuilder\IQueryBuilder;
+use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IConfig;
 use OCP\IDBConnection;
 use OCP\Security\ICrypto;
 use OCP\Server;
-use Psr\Log\LoggerInterface;
-use OCP\EventDispatcher\IEventDispatcher;
 use OCP\User\Events\UserConfigChangedEvent;
+use Psr\Log\LoggerInterface;
 
 /**
  * This class provides an easy way for apps to store user config in the
@@ -77,7 +77,7 @@ class UserConfig implements IUserConfig {
 		protected IConfig $config,
 		protected LoggerInterface $logger,
 		protected ICrypto $crypto,
-		protected IEventDispatcher $dispatcher
+		protected IEventDispatcher $dispatcher,
 	) {
 	}
 
