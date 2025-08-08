@@ -12,6 +12,7 @@ namespace OCP\User\Events;
 use OCP\EventDispatcher\Event;
 use OCP\AppFramework\Attribute\Listenable;
 
+/** @since 32.0.0 */
 #[Listenable(since: '32.0.0')]
 class UserConfigChangedEvent extends Event {
 	/**
